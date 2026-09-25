@@ -90,7 +90,7 @@ export class AutomationTestHelper {
       if (normalized.exportedAt) {
         normalized.exportedAt = "NORMALIZED_DATE";
       }
-      // exportedFrom.version is the installed Automate build (e.g. "18.4.0+6323387").
+      // exportedFrom.version is the installed Automate build (e.g. "17.4.0" or "18.4.0+6323387").
       if (normalized.product === "Umbraco.Automate" && normalized.version) {
         normalized.version = "NORMALIZED_VERSION";
       }

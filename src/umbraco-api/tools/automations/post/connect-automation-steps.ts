@@ -13,10 +13,14 @@ import { fetchAutomation, toPutBody, saveAutomation, resolveStep, resolveConnect
 import {
   resolveConnectionOutput,
   isSingleConnectionOutput,
-  supportsContainerDone,
   DONE_HANDLE,
   OUTCOME_HELP,
 } from "../_shared/step-outputs.js";
+import {
+  automateVersionSupports,
+  describeMinimumAutomateVersion,
+  getAutomateVersion,
+} from "../_shared/automate-version.js";
 
 const operators = [
   "Equals",
@@ -91,11 +95,16 @@ const connectAutomationStepsTool = {
     const sourceStep = source.id === TRIGGER_STEP_ID ? undefined : resolveStep(automation, source.id);
     const output = resolveConnectionOutput(sourceStep, params.outcome);
 
-    if (sourceStep && output.sourceHandle === DONE_HANDLE && !(await supportsContainerDone())) {
-      throw new ToolValidationError({
-        title: "Not supported by this Automate version",
-        detail: `This Umbraco Automate version (before 18.3) has no "done" output on ${sourceStep.actionAlias} steps - every connection from it runs inside the loop. Connect the step with outcome "body" to run it on each iteration, or upgrade Umbraco Automate to run steps after the loop.`,
-      });
+    if (sourceStep && output.sourceHandle === DONE_HANDLE) {
+      // Before the "done" output existed every connection from a container was part of its
+      // body, so a "done" connection would silently run inside the loop instead of after it.
+      const automateVersion = await getAutomateVersion();
+      if (!automateVersionSupports("containerDone", automateVersion)) {
+        throw new ToolValidationError({
+          title: "Not supported by this Automate version",
+          detail: `This Umbraco Automate version (${automateVersion}) has no "done" output on ${sourceStep.actionAlias} steps - every connection from it runs inside the loop. Connect the step with outcome "body" to run it on each iteration, or upgrade Umbraco Automate to ${describeMinimumAutomateVersion("containerDone")} or later to run steps after the loop.`,
+        });
+      }
     }
 
     if (

@@ -5,10 +5,11 @@
  * incoming HTTP request. Only meaningful for automations whose trigger is
  * webhook-based - give this URL to the external system that should call it.
  *
- * The webhook-url endpoint only exists from Umbraco Automate 18.4. Older
- * versions answer it with a bare 404 (no problem details), while the public
- * receiver at /automate/webhook/{id} works the same on both, so on those
- * versions the URL is derived instead of failing.
+ * The webhook-url endpoint only exists from Umbraco Automate 17.4 / 18.4 (see
+ * AUTOMATE_FEATURE_MIN_VERSIONS). Older versions answer it with a bare 404 (no
+ * problem details), while the public receiver at /automate/webhook/{id} works
+ * the same on all of them, so on those versions the URL is derived instead of
+ * failing.
  */
 
 import { z } from "zod";
@@ -27,6 +28,7 @@ import {
   getAutomationsByIdWebhookUrlResponse,
 } from "../../../api/generated/umbracoAutomateManagementApi.zod.js";
 import { getUmbracoBaseUrl } from "../../../../config/umbraco-base-url.js";
+import { describeMinimumAutomateVersion } from "../_shared/automate-version.js";
 
 type ApiClient = ReturnType<typeof getUmbracoAutomateManagementAPI>;
 
@@ -84,7 +86,7 @@ const getAutomationWebhookUrlTool = {
       return throwApiError(response);
     }
 
-    // Pre-18.4: confirm the automation exists so an unknown id still errors as it does on 18.4.
+    // No endpoint: confirm the automation exists so an unknown id still errors as it does with one.
     const automation = (await client.getAutomationsById(
       id,
       CAPTURE_RAW_HTTP_RESPONSE,
@@ -95,11 +97,12 @@ const getAutomationWebhookUrlTool = {
 
     const path = `${WEBHOOK_RECEIVER_PATH}/${id}`;
     const baseUrl = getUmbracoBaseUrl();
+    const versionNote = `this Umbraco Automate version (before ${describeMinimumAutomateVersion("webhookUrlEndpoint")}) does not report webhook URLs.`;
     return createToolResult({
       url: baseUrl ? `${baseUrl}${path}` : path,
       note: baseUrl
-        ? "Derived from the configured Umbraco base URL: this Umbraco Automate version (before 18.4) does not report webhook URLs. If the site's public domain differs from that base URL, use the public domain instead."
-        : "Path relative to the Umbraco site's public URL: this Umbraco Automate version (before 18.4) does not report webhook URLs.",
+        ? `Derived from the configured Umbraco base URL: ${versionNote} If the site's public domain differs from that base URL, use the public domain instead.`
+        : `Path relative to the Umbraco site's public URL: ${versionNote}`,
     });
   },
 } satisfies ToolDefinition<typeof inputSchema, typeof outputSchema>;

@@ -16,13 +16,9 @@
  * getNodeType and the handle constants in the Automate client's model-to-flow.ts.
  */
 
-import {
-  ToolValidationError,
-  UmbracoManagementClient,
-  CAPTURE_RAW_HTTP_RESPONSE,
-  type HttpResponse,
-} from "@umbraco-cms/mcp-server-sdk";
+import { ToolValidationError } from "@umbraco-cms/mcp-server-sdk";
 import type { StepConfigurationModel } from "../../../api/generated/umbracoAutomateManagementApi.js";
+import { describeMinimumAutomateVersion } from "./automate-version.js";
 
 const IF_ALIAS = "umbracoAutomate.if";
 const SWITCH_ALIAS = "umbracoAutomate.switch";
@@ -112,28 +108,6 @@ export function resolveConnectionOutput(
   return { sourceHandle: match, outcome: match };
 }
 
-/**
- * Whether the connected Automate has a "done" output on containers. It arrived in 18.3.0;
- * before that every connection from a container is part of its body, so a "done"
- * connection would silently run inside the loop instead of after it. The version comes
- * from the backoffice package manifest; if it can't be read, assume support rather than
- * block the call.
- */
-export async function supportsContainerDone(): Promise<boolean> {
-  try {
-    const response = (await UmbracoManagementClient<{ id?: string; version?: string }[]>(
-      { method: "GET", url: "/umbraco/management/api/v1/manifest/manifest" },
-      CAPTURE_RAW_HTTP_RESPONSE,
-    )) as unknown as HttpResponse<{ id?: string; version?: string }[]>;
-    const version = response.data?.find?.((p) => p.id === "Umbraco.Automate")?.version;
-    const [major, minor] = (version ?? "").split(/[.+-]/).map(Number);
-    if (!Number.isFinite(major) || !Number.isFinite(minor)) return true;
-    return major > 18 || (major === 18 && minor >= 3);
-  } catch {
-    return true;
-  }
-}
-
 /** Guidance for the `outcome` inputs of the connection tools. */
 export const OUTCOME_HELP =
-  "Which named output of the source step this connection leaves from. Required when the source step has named outputs, and must match one exactly (matching is case-insensitive here and saved in the exact form): If - \"true\"/\"false\"; Switch - one of its case names, or \"default\"; Request Approval - \"approved\"/\"rejected\"; While/ForEach/Parallel - \"body\" (runs inside the loop/branch; \"loop\" also accepted) or \"done\" (runs once afterwards; \"after\" also accepted; needs Umbraco Automate 18.3+, before which a container has only a body). Omit for steps with a single output, and for the trigger.";
+  `Which named output of the source step this connection leaves from. Required when the source step has named outputs, and must match one exactly (matching is case-insensitive here and saved in the exact form): If - "true"/"false"; Switch - one of its case names, or "default"; Request Approval - "approved"/"rejected"; While/ForEach/Parallel - "body" (runs inside the loop/branch; "loop" also accepted) or "done" (runs once afterwards; "after" also accepted; needs Umbraco Automate ${describeMinimumAutomateVersion("containerDone")} or later, before which a container has only a body). Omit for steps with a single output, and for the trigger.`;
