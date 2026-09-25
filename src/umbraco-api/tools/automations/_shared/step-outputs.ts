@@ -22,7 +22,7 @@ import { describeMinimumAutomateVersion } from "./automate-version.js";
 
 const IF_ALIAS = "umbracoAutomate.if";
 const SWITCH_ALIAS = "umbracoAutomate.switch";
-const APPROVAL_ALIAS = "umbracoAutomate.requestApproval";
+export const APPROVAL_ALIAS = "umbracoAutomate.requestApproval";
 const PARALLEL_ALIAS = "umbracoAutomate.parallel";
 const CONTAINER_ALIASES = new Set(["umbracoAutomate.while", "umbracoAutomate.forEach", PARALLEL_ALIAS]);
 
@@ -110,4 +110,4 @@ export function resolveConnectionOutput(
 
 /** Guidance for the `outcome` inputs of the connection tools. */
 export const OUTCOME_HELP =
-  `Which named output of the source step this connection leaves from. Required when the source step has named outputs, and must match one exactly (matching is case-insensitive here and saved in the exact form): If - "true"/"false"; Switch - one of its case names, or "default"; Request Approval - "approved"/"rejected"; While/ForEach/Parallel - "body" (runs inside the loop/branch; "loop" also accepted) or "done" (runs once afterwards; "after" also accepted; needs Umbraco Automate ${describeMinimumAutomateVersion("containerDone")}, before which a container has only a body). Omit for steps with a single output, and for the trigger.`;
+  `Which named output of the source step this connection leaves from. Required when the source step has named outputs, and must match one exactly (matching is case-insensitive here and saved in the exact form): If - "true"/"false"; Switch - one of its case names, or "default"; Request Approval - "approved"/"rejected" (needs Umbraco Automate ${describeMinimumAutomateVersion("approvalOutcomes")}; before that it has a single output that runs on approval - omit outcome); While/ForEach/Parallel - "body" (runs inside the loop/branch; "loop" also accepted) or "done" (runs once afterwards; "after" also accepted; needs Umbraco Automate ${describeMinimumAutomateVersion("containerDone")}, before which a container has only a body). Omit for steps with a single output, and for the trigger.`;

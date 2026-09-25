@@ -60,7 +60,8 @@ const SWITCH_HEADER_HEIGHT = 88;
 const SWITCH_ROW_HEIGHT = 45;
 const SWITCH_FIRST_HANDLE_Y = 110;
 
-const BRANCH_ALIASES = new Set(["umbracoAutomate.if", "umbracoAutomate.requestApproval"]);
+const APPROVAL_ALIAS = "umbracoAutomate.requestApproval";
+const BRANCH_ALIASES = new Set(["umbracoAutomate.if", APPROVAL_ALIAS]);
 const CONTAINER_ALIASES = new Set(["umbracoAutomate.while", "umbracoAutomate.forEach", "umbracoAutomate.parallel"]);
 const SWITCH_ALIAS = "umbracoAutomate.switch";
 
@@ -98,11 +99,14 @@ interface NodeBox {
 }
 
 // The canvas shows the step's name, or the catalogue name when the name is just the alias.
-function stepBox(step: StepConfigurationModel): NodeBox {
+function stepBox(step: StepConfigurationModel, options: CanvasLayoutOptions): NodeBox {
   const label = step.name ?? step.actionAlias;
   const header = textWidth(label, LABEL_WIDTHS) + HEADER_CHROME;
 
-  if (BRANCH_ALIASES.has(step.actionAlias)) {
+  // Before Request Approval had approved/rejected outputs the canvas drew it as a plain action.
+  const isBranch =
+    BRANCH_ALIASES.has(step.actionAlias) && (step.actionAlias !== APPROVAL_ALIAS || options.approvalOutcomes !== false);
+  if (isBranch) {
     const width = clampWidth(Math.max(header, chipWidth(step.alias)));
     const [first] = getStepOutputs(step) ?? [];
     return {
@@ -148,6 +152,11 @@ interface Box {
   y1: number;
 }
 
+export interface CanvasLayoutOptions {
+  /** Whether Request Approval steps have approved/rejected outputs (Automate 17.2 / 18.2+). Defaults to true. */
+  approvalOutcomes?: boolean;
+}
+
 export interface CanvasLayout {
   stepPositions: Record<string, { x: number; y: number }>;
   triggerPosition: { x: number; y: number };
@@ -157,9 +166,10 @@ export function computeCanvasLayout(
   steps: StepConfigurationModel[],
   connections: StepConnectionModel[],
   triggerLabel: TriggerLabel,
+  options: CanvasLayoutOptions = {},
 ): CanvasLayout {
   const stepById = new Map(steps.map((s) => [s.id, s]));
-  const boxes = new Map<string, NodeBox>(steps.map((s) => [s.id, stepBox(s)]));
+  const boxes = new Map<string, NodeBox>(steps.map((s) => [s.id, stepBox(s, options)]));
   boxes.set(TRIGGER_STEP_ID, triggerBox(triggerLabel));
 
   // Outgoing connections per node, ordered by the source's outputs (then as saved).

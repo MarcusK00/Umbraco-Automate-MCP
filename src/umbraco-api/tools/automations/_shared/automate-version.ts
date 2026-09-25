@@ -18,6 +18,11 @@ import {
 
 /** The first Automate version with each feature, per major. */
 export const AUTOMATE_FEATURE_MIN_VERSIONS = {
+  /**
+   * "approved" / "rejected" outputs on Request Approval. Before them the step has one
+   * plain output that runs on approval, and a rejection fails the run.
+   */
+  approvalOutcomes: { 17: "17.2.0", 18: "18.2.0" },
   /** A "done" output on While/ForEach/Parallel that runs once after the container. */
   containerDone: { 17: "17.3.0", 18: "18.3.0" },
   /** GET /automations/{id}/webhook-url. */

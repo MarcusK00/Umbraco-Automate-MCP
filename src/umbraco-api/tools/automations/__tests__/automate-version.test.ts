@@ -26,6 +26,13 @@ describe("automateVersionSupports", () => {
     expect(automateVersionSupports("webhookUrlEndpoint", "18.3.0")).toBe(false);
   });
 
+  it("should gate Request Approval's outputs at 17.2 / 18.2", () => {
+    expect(automateVersionSupports("approvalOutcomes", "17.1.0")).toBe(false);
+    expect(automateVersionSupports("approvalOutcomes", "17.2.0")).toBe(true);
+    expect(automateVersionSupports("approvalOutcomes", "18.1.0")).toBe(false);
+    expect(automateVersionSupports("approvalOutcomes", "18.2.0")).toBe(true);
+  });
+
   it("should read build metadata and prerelease suffixes", () => {
     expect(automateVersionSupports("containerDone", "17.3.0+6323387")).toBe(true);
     expect(automateVersionSupports("containerDone", "17.2.0-rc1")).toBe(false);

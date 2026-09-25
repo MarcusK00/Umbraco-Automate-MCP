@@ -37,7 +37,9 @@ import type {
   StepConfigurationModel,
   StepConnectionModel,
 } from "../../../api/generated/umbracoAutomateManagementApi.js";
-import { computeCanvasLayout, type TriggerLabel } from "./canvas-layout.js";
+import { computeCanvasLayout, type CanvasLayoutOptions, type TriggerLabel } from "./canvas-layout.js";
+import { APPROVAL_ALIAS } from "./step-outputs.js";
+import { automateVersionSupports, getAutomateVersion } from "./automate-version.js";
 
 export type ApiClient = ReturnType<typeof getUmbracoAutomateManagementAPI>;
 
@@ -220,9 +222,10 @@ async function getTriggerLabel(alias: string): Promise<TriggerLabel> {
 export function computeAutoLayout(
   steps: StepConfigurationModel[],
   connections: StepConnectionModel[],
-  triggerLabel: TriggerLabel = { name: "", hasSettings: true }
+  triggerLabel: TriggerLabel = { name: "", hasSettings: true },
+  options: CanvasLayoutOptions = {}
 ): { stepPositions: Record<string, { x: number; y: number }>; triggerPosition: { x: number; y: number } } {
-  return computeCanvasLayout(steps, connections, triggerLabel);
+  return computeCanvasLayout(steps, connections, triggerLabel, options);
 }
 
 /**
@@ -239,7 +242,11 @@ export async function applyAutoLayout(
   const triggerLabel = automation.trigger
     ? await getTriggerLabel(automation.trigger.triggerAlias)
     : { name: "", hasSettings: true };
-  const { stepPositions, triggerPosition } = computeAutoLayout(steps, connections, triggerLabel);
+  // Only an approval step's node shape depends on the Automate version.
+  const approvalOutcomes = steps.some((s) => s.actionAlias === APPROVAL_ALIAS)
+    ? automateVersionSupports("approvalOutcomes", await getAutomateVersion())
+    : true;
+  const { stepPositions, triggerPosition } = computeAutoLayout(steps, connections, triggerLabel, { approvalOutcomes });
 
   const laidOut = steps.map((s) => ({
     ...stripStepReadOnlyFields(s),
