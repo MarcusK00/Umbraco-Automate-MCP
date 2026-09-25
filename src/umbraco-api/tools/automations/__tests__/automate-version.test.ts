@@ -1,6 +1,7 @@
 import {
   automateVersionSupports,
   describeMinimumAutomateVersion,
+  minimumAutomateVersion,
 } from "../_shared/automate-version.js";
 
 describe("automateVersionSupports", () => {
@@ -42,9 +43,22 @@ describe("automateVersionSupports", () => {
   });
 });
 
+describe("minimumAutomateVersion", () => {
+  it("should name the minimum on the installed version's own line", () => {
+    expect(minimumAutomateVersion("containerDone", "17.0.0")).toBe("17.3");
+    expect(minimumAutomateVersion("containerDone", "18.2.0")).toBe("18.3");
+    expect(minimumAutomateVersion("webhookUrlEndpoint", "17.1.0")).toBe("17.4");
+  });
+
+  it("should return undefined for a major outside the table or an unreadable version", () => {
+    expect(minimumAutomateVersion("containerDone", "16.5.0")).toBeUndefined();
+    expect(minimumAutomateVersion("containerDone", undefined)).toBeUndefined();
+  });
+});
+
 describe("describeMinimumAutomateVersion", () => {
   it("should name the minimum on every line", () => {
-    expect(describeMinimumAutomateVersion("containerDone")).toBe("17.3 (Umbraco 17) or 18.3 (Umbraco 18)");
-    expect(describeMinimumAutomateVersion("webhookUrlEndpoint")).toBe("17.4 (Umbraco 17) or 18.4 (Umbraco 18)");
+    expect(describeMinimumAutomateVersion("containerDone")).toBe("17.3+ (Umbraco 17) / 18.3+ (Umbraco 18)");
+    expect(describeMinimumAutomateVersion("webhookUrlEndpoint")).toBe("17.4+ (Umbraco 17) / 18.4+ (Umbraco 18)");
   });
 });

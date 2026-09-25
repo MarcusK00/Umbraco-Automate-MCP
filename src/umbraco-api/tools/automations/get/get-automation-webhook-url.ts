@@ -97,7 +97,7 @@ const getAutomationWebhookUrlTool = {
 
     const path = `${WEBHOOK_RECEIVER_PATH}/${id}`;
     const baseUrl = getUmbracoBaseUrl();
-    const versionNote = `this Umbraco Automate version (before ${describeMinimumAutomateVersion("webhookUrlEndpoint")}) does not report webhook URLs.`;
+    const versionNote = `this Umbraco Automate version does not report webhook URLs (that needs ${describeMinimumAutomateVersion("webhookUrlEndpoint")}).`;
     return createToolResult({
       url: baseUrl ? `${baseUrl}${path}` : path,
       note: baseUrl

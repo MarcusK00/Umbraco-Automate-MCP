@@ -20,6 +20,7 @@ import {
   automateVersionSupports,
   describeMinimumAutomateVersion,
   getAutomateVersion,
+  minimumAutomateVersion,
 } from "../_shared/automate-version.js";
 
 const operators = [
@@ -102,7 +103,7 @@ const connectAutomationStepsTool = {
       if (!automateVersionSupports("containerDone", automateVersion)) {
         throw new ToolValidationError({
           title: "Not supported by this Automate version",
-          detail: `This Umbraco Automate version (${automateVersion}) has no "done" output on ${sourceStep.actionAlias} steps - every connection from it runs inside the loop. Connect the step with outcome "body" to run it on each iteration, or upgrade Umbraco Automate to ${describeMinimumAutomateVersion("containerDone")} or later to run steps after the loop.`,
+          detail: `This Umbraco Automate version (${automateVersion}) has no "done" output on ${sourceStep.actionAlias} steps - every connection from it runs inside the loop. Connect the step with outcome "body" to run it on each iteration, or upgrade Umbraco Automate to ${minimumAutomateVersion("containerDone", automateVersion) ?? describeMinimumAutomateVersion("containerDone")} or later to run steps after the loop.`,
         });
       }
     }

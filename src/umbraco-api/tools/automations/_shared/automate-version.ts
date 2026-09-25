@@ -57,11 +57,18 @@ export function automateVersionSupports(feature: AutomateFeature, version: strin
   return installed[0] > Math.max(...majors);
 }
 
-/** "17.3 (Umbraco 17) or 18.3 (Umbraco 18)" - for messages about a feature's minimum. */
+/** The feature's minimum on the installed version's major ("17.3"), or undefined if the major isn't in the table. */
+export function minimumAutomateVersion(feature: AutomateFeature, version: string | undefined): string | undefined {
+  const major = parseVersion(version)?.[0];
+  const minimum = major === undefined ? undefined : (AUTOMATE_FEATURE_MIN_VERSIONS[feature] as Record<number, string>)[major];
+  return minimum?.replace(/\.0$/, "");
+}
+
+/** "17.3+ (Umbraco 17) / 18.3+ (Umbraco 18)" - for messages that don't know the installed version. */
 export function describeMinimumAutomateVersion(feature: AutomateFeature): string {
   return Object.entries(AUTOMATE_FEATURE_MIN_VERSIONS[feature] as Record<number, string>)
-    .map(([major, version]) => `${version.replace(/\.0$/, "")} (Umbraco ${major})`)
-    .join(" or ");
+    .map(([major, version]) => `${version.replace(/\.0$/, "")}+ (Umbraco ${major})`)
+    .join(" / ");
 }
 
 /** The installed Automate version, from the backoffice package manifest; undefined if it can't be read. */
