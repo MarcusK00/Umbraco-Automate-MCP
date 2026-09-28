@@ -22,10 +22,13 @@ what you're doing.
 | Umbraco | Umbraco Automate | Package |
 |---------|------------------|---------|
 | **18** | **18.x** | **`@umbraco-automate/mcp-dev`** |
-| 17 | 17.x | `@umbraco-automate/mcp-dev@17` |
+| 17 | 17.x | `@umbraco-automate/mcp-dev@lts-17-beta` |
 
 Install the version that matches your site's Umbraco major — the API client and the version check
 differ between them.
+
+The Umbraco 17 line is in beta and published under the `lts-17-beta` dist-tag. A range such as
+`@17` doesn't match prereleases and won't find a version until 17.0.0 is released.
 
 ## 1. Create an API user in Umbraco
 
@@ -181,7 +184,7 @@ Set `DISABLE_MCP_CHAINING=true` to turn this off and run Automate tools only.
 |---------|--------------|
 | `401` on every tool | Wrong `UMBRACO_CLIENT_ID` / `UMBRACO_CLIENT_SECRET`, or the API user lacks permissions |
 | Self-signed certificate errors | Local HTTPS instance — set `NODE_TLS_REJECT_UNAUTHORIZED=0` |
-| Version mismatch warning, first tool call blocked | Instance isn't Umbraco 18 — use `@umbraco-automate/mcp-dev@17` for Umbraco 17, or set `UMBRACO_EXPECTED_MAJOR` |
+| Version mismatch warning, first tool call blocked | Instance isn't Umbraco 18 — use `@umbraco-automate/mcp-dev@lts-17-beta` for Umbraco 17, or set `UMBRACO_EXPECTED_MAJOR` |
 | `404` on Automate tools | Umbraco Automate isn't installed on the instance |
 | A tool you expected isn't listed | Check `UMBRACO_TOOL_MODES` and the include/exclude variables with `--debug-config` |
 
