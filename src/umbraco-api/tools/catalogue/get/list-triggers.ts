@@ -38,7 +38,7 @@ const inputSchema = {
 const listCatalogueTriggersTool = {
   name: "list-catalogue-triggers",
   description:
-    "Lists the available trigger definitions that can start an automation (e.g. content published, schedule, webhook received). Each item's `alias` is the identifier used to reference that trigger when configuring an automation's trigger step, `supportsManualRun` (when present) indicates whether the trigger can also be fired manually, and `connectionTypeAlias` (when present) identifies which connection type it requires. Optionally pass a `workspaceId` to only return triggers usable with connections configured in that workspace. Call this before configuring an automation's trigger to discover valid aliases and their settings schema.",
+    "Lists the available trigger definitions that can start an automation (e.g. content published, schedule, webhook received). Each item's `alias` is the identifier used to reference that trigger when configuring an automation's trigger step, `supportsManualRun` (when present) indicates whether the trigger can also be fired manually, and `connectionTypeAlias` (when present) identifies which connection type it requires. Optionally pass a `workspaceId` to only return triggers usable with connections configured in that workspace. Call this before configuring an automation's trigger to discover valid aliases and their settings schema. When an item's `hasDynamicOutputSchema` is true, its `outputSchema` here is only a generic placeholder and may not match the real shape - call resolve-step-type-output-schema with the configured settings to get the fields later steps can bind to.",
   inputSchema,
   outputSchema,
   slices: ["read"],

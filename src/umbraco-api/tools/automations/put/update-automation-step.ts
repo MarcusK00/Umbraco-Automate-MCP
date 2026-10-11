@@ -17,7 +17,13 @@ import {
   stripStepReadOnlyFields,
   applyAutoLayout,
 } from "../_shared/automation-graph.js";
-import { normalizeStepSettings, CONDITION_SETTINGS_HELP } from "../_shared/step-settings.js";
+import {
+  normalizeStepSettings,
+  CONDITION_SETTINGS_HELP,
+  SETTINGS_KEYS_HELP,
+  STEP_VALUES_HELP,
+} from "../_shared/step-settings.js";
+import { assertKnownSettingKeys } from "../_shared/settings-keys.js";
 
 const errorBehaviors = ["Retry", "Suspend", "Terminate", "Compensate"] as const;
 
@@ -32,7 +38,7 @@ const inputSchema = {
     .record(z.string(), z.unknown())
     .optional()
     .describe(
-      `New configuration for the step, replacing its current settings entirely (not merged field-by-field). Match the shape from that step type's settingsSchema. Omit to leave settings unchanged. ${CONDITION_SETTINGS_HELP}`
+      `New configuration for the step, replacing its current settings entirely (not merged field-by-field). Match the shape from that step type's settingsSchema. Omit to leave settings unchanged. ${SETTINGS_KEYS_HELP} ${STEP_VALUES_HELP} ${CONDITION_SETTINGS_HELP}`
     ),
   inputMappings: z
     .record(z.string(), z.string())
@@ -84,6 +90,7 @@ const updateAutomationStepTool = {
   handler: async (params: UpdateAutomationStepParams) => {
     const automation = await fetchAutomation(params.automationId);
     const target = resolveStep(automation, params.step);
+    await assertKnownSettingKeys(target.actionAlias, params.settings);
 
     const updatedSteps = automation.steps.map((step) => {
       const s = stripStepReadOnlyFields(step);

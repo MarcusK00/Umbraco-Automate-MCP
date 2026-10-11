@@ -114,6 +114,26 @@ describe("add-automation-step", () => {
     });
   });
 
+  it("should refuse a settings key the step type does not have", async () => {
+    const result = await addAutomationStepTool.handler(
+      {
+        automationId: automation.getId(),
+        actionAlias: "umbracoAutomate.delay",
+        alias: "waitABit",
+        name: "Wait a bit",
+        settings: { wait: "00:00:05" },
+        inputMappings: undefined,
+        errorBehavior: undefined,
+        retryInterval: undefined,
+        maxRetries: undefined,
+      },
+      createMockRequestHandlerExtra(),
+    );
+
+    expect(result.isError).toBe(true);
+    expect(JSON.stringify(result.content)).toContain("duration");
+  });
+
   it("should return an error when the alias is already used by another step", async () => {
     const context = createMockRequestHandlerExtra();
 

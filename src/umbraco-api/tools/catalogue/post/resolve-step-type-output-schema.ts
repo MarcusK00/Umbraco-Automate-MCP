@@ -25,6 +25,8 @@ import {
   type ProblemDetails,
 } from "@umbraco-cms/mcp-server-sdk";
 import { z } from "zod";
+import { assertKnownSettingKeys } from "../../automations/_shared/settings-keys.js";
+import { SETTINGS_KEYS_HELP } from "../../automations/_shared/step-settings.js";
 import type { getUmbracoAutomateManagementAPI } from "../../../api/generated/umbracoAutomateManagementApi.js";
 import { postCatalogueStepTypesByAliasOutputSchemaResponse } from "../../../api/generated/umbracoAutomateManagementApi.zod.js";
 
@@ -39,7 +41,7 @@ const inputSchema = z.object({
   settings: z
     .record(z.string(), z.unknown())
     .describe(
-      "The step's configured settings, matching the shape described by that step type's settingsSchema. Used to resolve a dynamic output schema when hasDynamicOutputSchema is true."
+      `The step's configured settings, matching the shape described by that step type's settingsSchema, e.g. Form Submitted takes \`formIds\` (an array of form ids). ${SETTINGS_KEYS_HELP} Used to resolve a dynamic output schema when hasDynamicOutputSchema is true. An id that doesn't exist is not reported - it just adds nothing (a form that doesn't exist adds no fields), so check ids before relying on the result.`
     ),
 });
 
@@ -56,6 +58,7 @@ const resolveStepTypeOutputSchemaTool = {
     readOnlyHint: true,
   },
   handler: async ({ alias, settings }) => {
+    await assertKnownSettingKeys(alias, settings);
     const client = getApiClient<ApiClient>();
     const response = (await client.postCatalogueStepTypesByAliasOutputSchema(
       alias,

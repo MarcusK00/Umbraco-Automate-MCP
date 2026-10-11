@@ -10,6 +10,8 @@
 import { z } from "zod";
 import { withStandardDecorators, createToolResult, type ToolDefinition } from "@umbraco-cms/mcp-server-sdk";
 import { fetchAutomation, toPutBody, saveAutomation, applyAutoLayout } from "../_shared/automation-graph.js";
+import { assertKnownSettingKeys } from "../_shared/settings-keys.js";
+import { SETTINGS_KEYS_HELP } from "../_shared/step-settings.js";
 
 const inputSchema = {
   automationId: z.string().uuid().describe("Id of the automation to set the trigger for."),
@@ -24,7 +26,7 @@ const inputSchema = {
     .record(z.string(), z.unknown())
     .optional()
     .describe(
-      "The trigger's configuration, matching the shape described by that trigger type's settingsSchema (see list-catalogue-triggers). Required when setting a triggerAlias; ignored when clearing the trigger."
+      `The trigger's configuration, matching the shape described by that trigger type's settingsSchema (see list-catalogue-triggers), e.g. Form Submitted takes \`formIds\` (an array of form ids). ${SETTINGS_KEYS_HELP} Required when setting a triggerAlias; ignored when clearing the trigger.`
     ),
 };
 
@@ -47,6 +49,7 @@ const setAutomationTriggerTool = {
     idempotentHint: true,
   },
   handler: async (params: SetAutomationTriggerParams) => {
+    if (params.triggerAlias) await assertKnownSettingKeys(params.triggerAlias, params.settings);
     const automation = await fetchAutomation(params.automationId);
 
     const trigger = params.triggerAlias

@@ -32,7 +32,7 @@ const inputSchema = {
 const listCatalogueActionsTool = {
   name: "list-catalogue-actions",
   description:
-    "Lists the available action step definitions that can be added to an automation. Each item's `alias` is the identifier used to reference that action when adding a step to an automation in the automations collection, and `connectionTypeAlias` (when present) identifies which connection type a step of this action requires. Optionally pass a `workspaceId` to only return actions usable with connections configured in that workspace. Call this before adding an action step to discover valid aliases and their settings schema.",
+    "Lists the available action step definitions that can be added to an automation. Each item's `alias` is the identifier used to reference that action when adding a step to an automation in the automations collection, and `connectionTypeAlias` (when present) identifies which connection type a step of this action requires. Optionally pass a `workspaceId` to only return actions usable with connections configured in that workspace. Call this before adding an action step to discover valid aliases and their settings schema. When an item's `hasDynamicOutputSchema` is true, its `outputSchema` here is only a generic placeholder and may not match the real shape - call resolve-step-type-output-schema with the configured settings to get the fields later steps can bind to.",
   inputSchema,
   outputSchema,
   slices: ["read"],

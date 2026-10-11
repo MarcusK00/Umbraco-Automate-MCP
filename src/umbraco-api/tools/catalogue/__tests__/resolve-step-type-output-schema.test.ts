@@ -10,6 +10,16 @@ import resolveStepTypeOutputSchemaTool from "../post/resolve-step-type-output-sc
 describe("resolve-step-type-output-schema", () => {
   setupTestEnvironment();
 
+  it("should refuse a settings key the step type does not have", async () => {
+    const result = await resolveStepTypeOutputSchemaTool.handler(
+      { alias: "umbracoAutomate.logMessage", settings: { text: "Hello" } },
+      createMockRequestHandlerExtra()
+    );
+
+    expect(result.isError).toBe(true);
+    expect(JSON.stringify(result.content)).toContain("message");
+  });
+
   it("should resolve the output schema for a configured step", async () => {
     const context = createMockRequestHandlerExtra();
 

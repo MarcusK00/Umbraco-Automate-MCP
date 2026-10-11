@@ -59,6 +59,17 @@ export function normalizeStepSettings(settings: JsonObject): JsonObject {
   );
 }
 
+/** Shared guidance on settings keys, for every tool that saves or resolves step or trigger settings. */
+export const SETTINGS_KEYS_HELP =
+  "Use each settingsSchema field's `key` exactly - a key the step type doesn't declare is refused, because Automate would save it without using it.";
+
+/**
+ * Shared guidance on binding expressions and values, for the `settings` input of the step tools.
+ * Binding syntax mirrors Automate's BindingEvaluator (`${ steps.myAlias.field }`).
+ */
+export const STEP_VALUES_HELP =
+  "Fields with supportsBindings: true accept binding expressions: `${trigger.<field>}` for the trigger's output and `${steps.<stepAlias>.<field>}` for an earlier step's output, with field names taken from that trigger's or step's outputSchema (for one with hasDynamicOutputSchema, from resolve-step-type-output-schema). Values reach the step as given, so a value written to a content property must be in that property's stored form - e.g. a Toggle (true/false) property takes 1 or 0, not \"true\".";
+
 /**
  * Shared guidance for the `settings` input of the step tools, so the model knows
  * the condition format without guessing from other automations.
