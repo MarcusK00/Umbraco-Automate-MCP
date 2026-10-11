@@ -10,7 +10,9 @@
  * So the step tools check the keys against the step type's settingsSchema from the
  * catalogue first and refuse unknown ones, suggesting the declared key a near miss was
  * meant to be. Keys match case-insensitively, as the server reads them. If the catalogue
- * can't be read or doesn't know the alias, the check is skipped and the API decides.
+ * can't be read, doesn't know the alias, or declares no settings fields for it, the check
+ * is skipped and the API decides - a step type (e.g. from a package) may read settings it
+ * doesn't declare, and refusing every key would make it impossible to configure.
  */
 
 import {
@@ -47,7 +49,8 @@ export function findUnknownSettingKeys(
     });
 }
 
-async function fetchSettingsFields(alias: string): Promise<ReadonlyArray<{ key: string }> | null | undefined> {
+/** The step type's declared settings fields, or undefined when there are none to check against. */
+async function fetchSettingsFields(alias: string): Promise<ReadonlyArray<{ key: string }> | undefined> {
   try {
     const client = getApiClient<ApiClient>();
     const response = (await client.getCatalogueStepTypes({}, CAPTURE_RAW_HTTP_RESPONSE)) as unknown as HttpResponse<
@@ -55,8 +58,8 @@ async function fetchSettingsFields(alias: string): Promise<ReadonlyArray<{ key: 
     >;
     if (response.status < 200 || response.status >= 300 || !Array.isArray(response.data)) return undefined;
     const stepType = response.data.find((item) => item.alias === alias);
-    if (!stepType) return undefined;
-    return stepType.settingsSchema?.fields ?? null;
+    const fields = stepType?.settingsSchema?.fields;
+    return fields && fields.length > 0 ? fields : undefined;
   } catch {
     return undefined;
   }
@@ -64,7 +67,7 @@ async function fetchSettingsFields(alias: string): Promise<ReadonlyArray<{ key: 
 
 /**
  * Refuses `settings` keys the step type `alias` doesn't declare, listing the keys it does.
- * Does nothing if the catalogue can't be read or doesn't know the alias.
+ * Does nothing if the catalogue can't be read, doesn't know the alias, or declares no settings for it.
  */
 export async function assertKnownSettingKeys(alias: string, settings: Record<string, unknown> | undefined): Promise<void> {
   if (!settings || Object.keys(settings).length === 0) return;
@@ -77,13 +80,12 @@ export async function assertKnownSettingKeys(alias: string, settings: Record<str
   const listed = unknown
     .map(({ key, suggestion }) => (suggestion ? `"${key}" (did you mean "${suggestion}"?)` : `"${key}"`))
     .join(", ");
-  const declared = fields?.map((field) => `"${field.key}"`).join(", ");
+  const declared = fields.map((field) => `"${field.key}"`).join(", ");
   throw new ToolValidationError({
     title: "Unknown settings",
     status: 400,
     detail:
-      `"${alias}" has no setting ${listed}. ` +
-      (declared ? `Its settings are: ${declared}.` : "It takes no settings.") +
+      `"${alias}" has no setting ${listed}. Its settings are: ${declared}.` +
       " Automate would save an unknown key without using it, so the step would silently behave as if it were not set." +
       " Use the `key` values from the step type's settingsSchema in the catalogue.",
   });
