@@ -22,6 +22,7 @@ import {
   saveAutomation,
   stripStepReadOnlyFields,
   applyAutoLayout,
+  TRIGGER_STEP_ID,
 } from "../_shared/automation-graph.js";
 import {
   normalizeStepSettings,
@@ -101,7 +102,7 @@ const outputSchema = z.object({
 const addAutomationStepTool = {
   name: "add-automation-step",
   description:
-    "Adds a new step to an automation's graph. You only need to describe the new step - this tool reads the automation's current definition, appends the step, and saves it back, so nothing else is affected. A step with no incoming connection runs directly off the trigger, so a one-step automation needs no connect-automation-steps call; use connect-automation-steps to make a step run after another step. Canvas positions are assigned automatically (an unconnected step waits in a row below the graph until it is connected); use the Umbraco backoffice canvas to rearrange steps visually if needed.",
+    "Adds a new step to an automation's graph. You only need to describe the new step - this tool reads the automation's current definition, appends the step, and saves it back, so nothing else is affected. If the automation has a trigger and no steps yet, the new step is connected to the trigger, so a one-step automation needs no connect-automation-steps call. Later steps are added unconnected: use connect-automation-steps to make each one run after another step (an unconnected step still runs directly off the trigger, but the backoffice canvas shows it detached). Canvas positions are assigned automatically (an unconnected step waits in a row below the graph until it is connected); use the Umbraco backoffice canvas to rearrange steps visually if needed.",
   inputSchema,
   outputSchema,
   slices: ["update"],
@@ -132,16 +133,35 @@ const addAutomationStepTool = {
       maxRetries: params.maxRetries ?? null,
     };
 
-    // Not connected yet, so the layout parks it in the row below the graph until it is.
-    const { steps, canvasState } = await applyAutoLayout(automation, automation.connections, [
+    // The first step gets an explicit connection from the trigger, as the backoffice canvas
+    // saves it. Automate runs an unconnected step off the trigger anyway, but the canvas only
+    // draws the line for a saved connection. Later steps are left unconnected (the layout
+    // parks them in the row below the graph) until connect-automation-steps places them.
+    const connectToTrigger = automation.trigger != null && automation.steps.length === 0;
+    const connections = connectToTrigger
+      ? [
+          ...automation.connections,
+          {
+            sourceStepId: TRIGGER_STEP_ID,
+            sourceHandle: null,
+            targetStepId: stepId,
+            targetHandle: null,
+            outcome: null,
+            filter: null,
+          },
+        ]
+      : automation.connections;
+    const { steps, canvasState } = await applyAutoLayout(automation, connections, [
       ...automation.steps.map(stripStepReadOnlyFields),
       newStep,
     ]);
-    const body = toPutBody(automation, { steps, canvasState });
+    const body = toPutBody(automation, { steps, connections, canvasState });
     await saveAutomation(params.automationId, body);
 
     return createToolResult({
-      message: `Step "${params.alias}" added.`,
+      message: connectToTrigger
+        ? `Step "${params.alias}" added and connected to the trigger.`
+        : `Step "${params.alias}" added.`,
       stepId,
       alias: params.alias,
     });
