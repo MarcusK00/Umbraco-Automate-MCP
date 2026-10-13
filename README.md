@@ -30,6 +30,16 @@ differ between them.
 The Umbraco 17 line is in beta and published under the `lts-17-beta` dist-tag. A range such as
 `@17` doesn't match prereleases and won't find a version until 17.0.0 is released.
 
+Every Automate 18.x release works. A few features arrived partway through the line (18.N ships the
+same features as 17.N); on older versions the tools refuse them with a clear message, or fall back:
+
+| Feature | Automate 18.x | Automate 17.x | Older versions |
+|---------|---------------|---------------|----------------|
+| Request Approval `approved`/`rejected` outputs | 18.2+ | 17.2+ | One output that runs on approval; `rejected` refused |
+| Container (While/ForEach/Parallel) `done` output | 18.3+ | 17.3+ | `done` refused; connect steps inside the `body` |
+| `get-automation-webhook-url` reported by Umbraco | 18.4+ | 17.4+ | URL derived from `UMBRACO_BASE_URL`, with a note |
+| Trigger `supportsManualRun` | 18.4+ | 17.4+ | Field omitted from `list-catalogue-triggers` |
+
 ## 1. Create an API user in Umbraco
 
 In the Umbraco backoffice:
