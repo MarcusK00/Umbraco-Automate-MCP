@@ -7,7 +7,16 @@ exports[`export-automation should export a portable definition of the automation
     "automation": {
       "alias": "_test_export_automation",
       "canvasState": "{"triggerPosition":{"x":-111,"y":0}}",
-      "connections": [],
+      "connections": [
+        {
+          "filter": null,
+          "outcome": null,
+          "sourceHandle": null,
+          "sourceStepId": "00000000-0000-0000-0000-000000000000",
+          "targetHandle": null,
+          "targetStepId": "00000000-0000-0000-0000-000000000000",
+        },
+      ],
       "description": null,
       "id": "00000000-0000-0000-0000-000000000000",
       "name": "_Test Export Automation",
@@ -23,8 +32,8 @@ exports[`export-automation should export a portable definition of the automation
           "maxRetries": null,
           "name": "Delay Step",
           "position": {
-            "x": -111,
-            "y": 209,
+            "x": -141,
+            "y": 137,
           },
           "retryInterval": null,
           "settings": {

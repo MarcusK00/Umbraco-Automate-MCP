@@ -80,6 +80,25 @@ describe("update-automation-step", () => {
     expect(createSnapshotResult(result)).toMatchSnapshot();
   });
 
+  it("should refuse a settings key the step type does not have", async () => {
+    const result = await updateAutomationStepTool.handler(
+      {
+        automationId: automation.getId(),
+        step: TEST_STEP_ALIAS,
+        name: undefined,
+        settings: { wait: "00:00:05" },
+        inputMappings: undefined,
+        errorBehavior: undefined,
+        retryInterval: undefined,
+        maxRetries: undefined,
+      },
+      createMockRequestHandlerExtra(),
+    );
+
+    expect(result.isError).toBe(true);
+    expect(JSON.stringify(result.content)).toContain("duration");
+  });
+
   it("should return an error for an unknown step alias", async () => {
     const context = createMockRequestHandlerExtra();
 

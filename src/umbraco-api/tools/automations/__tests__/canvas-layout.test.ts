@@ -58,6 +58,21 @@ describe("computeCanvasLayout", () => {
     expect(centre(yes) + centre(no)).toBeCloseTo(0, 0);
   });
 
+  it("should lay out Request Approval as a plain action when it has no approved/rejected outputs", () => {
+    const steps = [step("approve", "umbracoAutomate.requestApproval"), step("after")];
+    const connections = [edge(TRIGGER, "approve"), edge("approve", "after")];
+
+    // Automate before 17.2 / 18.2: one centred handle, so the chain is straight.
+    const plain = computeCanvasLayout(steps, connections, MANUAL, { approvalOutcomes: false });
+    expect(plain.stepPositions.approve).toEqual({ x: -ACTION_WIDTH / 2, y: 137 });
+    expect(centre(plain.stepPositions.after)).toBeCloseTo(0, 5);
+    expect(plain.stepPositions.after.y).toBe(137 + ACTION_HEIGHT + 72);
+
+    // With outputs it is a branch node, and the default keeps that.
+    const branch = computeCanvasLayout(steps, [edge(TRIGGER, "approve"), edge("approve", "after", "approved")], MANUAL);
+    expect(centre(branch.stepPositions.after)).not.toBeCloseTo(0, 0);
+  });
+
   it("should put a lone branch child directly under the output it leaves from", () => {
     const steps = [step("check", "umbracoAutomate.if", { conditions: cond }), step("no")];
     const layout = computeCanvasLayout(steps, [edge(TRIGGER, "check"), edge("check", "no", "false")], MANUAL);

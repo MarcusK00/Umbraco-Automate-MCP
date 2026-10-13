@@ -46,3 +46,6 @@ export const collections = [
 
 export { allModes, allModeNames } from "./config/mode-registry.js";
 export { allSliceNames } from "./config/slice-registry.js";
+
+/** Orval client factory for this product, used by hosts that run several Umbraco MCPs in one process. */
+export { getUmbracoAutomateManagementAPI as createApiClient } from "./umbraco-api/api/generated/umbracoAutomateManagementApi.js";

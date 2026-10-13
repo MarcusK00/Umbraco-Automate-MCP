@@ -9,14 +9,21 @@
 
 import { z } from "zod";
 import { withStandardDecorators, createToolResult, ToolValidationError, type ToolDefinition } from "@umbraco-cms/mcp-server-sdk";
+import type { StepConfigurationModel } from "../../../api/generated/umbracoAutomateManagementApi.js";
 import { fetchAutomation, toPutBody, saveAutomation, resolveStep, resolveConnectionSource, applyAutoLayout, TRIGGER_STEP_ID } from "../_shared/automation-graph.js";
 import {
   resolveConnectionOutput,
   isSingleConnectionOutput,
-  supportsContainerDone,
+  APPROVAL_ALIAS,
   DONE_HANDLE,
   OUTCOME_HELP,
 } from "../_shared/step-outputs.js";
+import {
+  automateVersionSupports,
+  describeMinimumAutomateVersion,
+  getAutomateVersion,
+  minimumAutomateVersion,
+} from "../_shared/automate-version.js";
 
 const operators = [
   "Equals",
@@ -74,6 +81,28 @@ type ConnectAutomationStepsParams = {
 
 const outputSchema = z.object({ message: z.string() });
 
+/**
+ * Request Approval only has "approved"/"rejected" outputs from Automate 17.2 / 18.2. Before
+ * that its single plain output runs on approval and a rejection fails the run, so a
+ * connection saved on a named output is never followed.
+ */
+async function resolveApprovalOutput(
+  step: StepConfigurationModel,
+  outcome: string | undefined,
+): Promise<{ sourceHandle: string | null; outcome: string | null }> {
+  const automateVersion = await getAutomateVersion();
+  if (automateVersionSupports("approvalOutcomes", automateVersion)) {
+    return resolveConnectionOutput(step, outcome);
+  }
+  if (outcome === undefined || outcome.trim().toLowerCase() === "approved") {
+    return { sourceHandle: null, outcome: null };
+  }
+  throw new ToolValidationError({
+    title: "Not supported by this Automate version",
+    detail: `This Umbraco Automate version (${automateVersion}) has no "${outcome}" output on Request Approval steps: its single output runs when the step is approved, and a rejection fails the run. Connect without an outcome (or with "approved") to run a step after approval, or upgrade Umbraco Automate to ${minimumAutomateVersion("approvalOutcomes", automateVersion) ?? describeMinimumAutomateVersion("approvalOutcomes")} or later to branch on the decision.`,
+  });
+}
+
 const connectAutomationStepsTool = {
   name: "connect-automation-steps",
   description:
@@ -89,13 +118,21 @@ const connectAutomationStepsTool = {
     const source = resolveConnectionSource(automation, params.sourceStep);
     const target = resolveStep(automation, params.targetStep);
     const sourceStep = source.id === TRIGGER_STEP_ID ? undefined : resolveStep(automation, source.id);
-    const output = resolveConnectionOutput(sourceStep, params.outcome);
+    const output =
+      sourceStep?.actionAlias === APPROVAL_ALIAS
+        ? await resolveApprovalOutput(sourceStep, params.outcome)
+        : resolveConnectionOutput(sourceStep, params.outcome);
 
-    if (sourceStep && output.sourceHandle === DONE_HANDLE && !(await supportsContainerDone())) {
-      throw new ToolValidationError({
-        title: "Not supported by this Automate version",
-        detail: `This Umbraco Automate version (before 18.3) has no "done" output on ${sourceStep.actionAlias} steps - every connection from it runs inside the loop. Connect the step with outcome "body" to run it on each iteration, or upgrade Umbraco Automate to run steps after the loop.`,
-      });
+    if (sourceStep && output.sourceHandle === DONE_HANDLE) {
+      // Before the "done" output existed every connection from a container was part of its
+      // body, so a "done" connection would silently run inside the loop instead of after it.
+      const automateVersion = await getAutomateVersion();
+      if (!automateVersionSupports("containerDone", automateVersion)) {
+        throw new ToolValidationError({
+          title: "Not supported by this Automate version",
+          detail: `This Umbraco Automate version (${automateVersion}) has no "done" output on ${sourceStep.actionAlias} steps - every connection from it runs inside the loop. Connect the step with outcome "body" to run it on each iteration, or upgrade Umbraco Automate to ${minimumAutomateVersion("containerDone", automateVersion) ?? describeMinimumAutomateVersion("containerDone")} or later to run steps after the loop.`,
+        });
+      }
     }
 
     if (

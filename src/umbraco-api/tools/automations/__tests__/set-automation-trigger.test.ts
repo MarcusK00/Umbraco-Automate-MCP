@@ -79,6 +79,20 @@ describe("set-automation-trigger", () => {
     expect(structured.message).toBe("Trigger cleared.");
   });
 
+  it("should refuse a settings key the trigger type does not have", async () => {
+    const result = await setAutomationTriggerTool.handler(
+      {
+        automationId: automation.getId(),
+        triggerAlias: "umbracoAutomate.scheduled",
+        settings: { cron: "0 8 * * 1" },
+      },
+      createMockRequestHandlerExtra(),
+    );
+
+    expect(result.isError).toBe(true);
+    expect(JSON.stringify(result.content)).toContain("cronExpression");
+  });
+
   it("should return an error for a non-existent automationId", async () => {
     const context = createMockRequestHandlerExtra();
 

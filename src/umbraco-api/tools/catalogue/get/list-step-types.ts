@@ -32,7 +32,7 @@ const inputSchema = {
 const listCatalogueStepTypesTool = {
   name: "list-catalogue-step-types",
   description:
-    "Lists all step type definitions available for building an automation, across every category (actions, control-flows, triggers, and more) in one flat list. Each item's `alias` is the identifier used when adding a step to an automation, and `type` identifies which category it belongs to. Optionally pass `type` to filter to a single category. Prefer the category-specific tools (list-catalogue-actions, list-catalogue-control-flows, list-catalogue-triggers) when you already know the category you need; use this tool when you need an overview across all categories or don't know which category a step belongs to.",
+    "Lists all step type definitions available for building an automation, across every category (actions, control-flows, triggers, and more) in one flat list. Each item's `alias` is the identifier used when adding a step to an automation, and `type` identifies which category it belongs to. Optionally pass `type` to filter to a single category. Prefer the category-specific tools (list-catalogue-actions, list-catalogue-control-flows, list-catalogue-triggers) when you already know the category you need; use this tool when you need an overview across all categories or don't know which category a step belongs to. When an item's `hasDynamicOutputSchema` is true, its `outputSchema` here is only a generic placeholder and may not match the real shape - call resolve-step-type-output-schema with the configured settings to get the fields later steps can bind to.",
   inputSchema,
   outputSchema,
   slices: ["read"],

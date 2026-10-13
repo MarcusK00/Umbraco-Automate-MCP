@@ -28,7 +28,7 @@ const inputSchema = {
 const publishAutomationTool = {
   name: "publish-automation",
   description:
-    "Publishes an automation, making its current version live. This activates the trigger so the automation can start running for real - only use when the automation's trigger, steps and connections are ready. Use unpublish-automation to stop it from running without deleting it.",
+    "Publishes an automation, making its current version live. This activates the trigger so the automation can start running for real - only use when the automation's trigger, steps and connections are ready. Publishing checks that a trigger is set, the workspace's service account, allowed connections and section access, and that `${steps.…}` bindings name existing steps. It does not check ids inside settings (forms, document types, content), `${trigger.…}` field names or setting values - mistakes there only show up when a run fails. An automation's `health` reflects the error rate of its runs, not whether its configuration is valid. Use unpublish-automation to stop it from running without deleting it.",
   inputSchema,
   slices: ["publish"],
   annotations: {

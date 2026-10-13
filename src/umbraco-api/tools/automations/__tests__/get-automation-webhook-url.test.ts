@@ -48,7 +48,7 @@ describe("get-automation-webhook-url", () => {
     expect(result.isError).toBeFalsy();
     const snapshot = createSnapshotResult(result);
     const structuredContent = snapshot.structuredContent as { url: string; note?: string };
-    // Automate < 18.4 has no webhook-url endpoint, so the tool derives the URL and says so in
+    // Automate before 17.4 / 18.4 has no webhook-url endpoint, so the tool derives the URL and says so in
     // `note`; the URL itself is the same on every version, so only `note` is left out here.
     expect(structuredContent.url).toBe(
       `${process.env.UMBRACO_BASE_URL?.replace(/\/+$/, "")}/automate/webhook/${automation.getId()}`,
